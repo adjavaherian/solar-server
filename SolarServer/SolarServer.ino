@@ -31,7 +31,7 @@
 #define DBG_OUTPUT_PORT Serial
 
 const char* ssid = "SFO";
-const char* password = "12341234";
+const char* password = "11111111";
 const char* host = "solar-server";
 
 ESP8266WebServer server(80);
