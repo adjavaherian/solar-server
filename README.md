@@ -2,15 +2,15 @@
 Solar powered webserver on ESP8266.  This project is based on the [Arduino core for ESP8266](https://github.com/esp8266/Arduino)
 
 ## Requirements
-* Arduino 1.6.4 or higher
+* Arduino 1.6.4 or higher (or Platform.io IDE)
 * [Arduino core for ESP8266](https://github.com/esp8266/Arduino)
 
-## Install Board Manager
+## Install Board Manager (Arduino)
 * Start Arduino and open Preferences window.
 Enter `http://arduino.esp8266.com/stable/package_esp8266com_index.json` into Additional Board Manager URLs field. You can add multiple URLs, separating them with commas.
 * Open Boards Manager from Tools > Board menu and install esp8266 platform (and don't forget to select your ESP8266 board from Tools > Board menu after installation).
 
-## Flash your ESP8266
+## Flash your ESP8266 (Arduino)
 * If you are using a Gizwitts serial breakout board you should see a reset button and a flash button on the breakout board.
 * Open up the `SolarServer` sketch in Arduino
 * Make sure the Arduino Serial Monitor is closed
@@ -39,6 +39,15 @@ solar-server started
 `
 * Visit the solar server in your browser
   [http://solar-server.local](http://solar-server.local)
+
+## Platform.io (Requires Atom)
+I suggest using Platform.io IDE because it provides a nice serial monitor and more importantly a config file that can be used to share settings for hardware module Baud, UART, etc.
+Once you get Platform setup on Atom, you should be able to sync the code to the board and use the serial monitor with very little effort.  Uploading Data from the `./data` directory should also be easy, but it does require reading the doc below.
+* [Intallation](http://docs.platformio.org/en/latest/ide/atom.html#ide-installation)
+* [Data Uploading](http://docs.platformio.org/en/latest/platforms/espressif8266.html#platform-espressif-uploadfs)
+
+## Platform.io for development
+There are two code bases in this repo, one for Arduino `./SolarServer` and one for Platform.io `./src`.  Notice the code is pretty much the same as the Arduino code, but you have a .cpp extension as opposed to .ino for Arduino based builds.  Also for Platform, your data assets that you want on the filesystem, should be in `./data`.  This is configurable in `./platformio.ini`.
 
 ## Etc.
 * [ESP Tools](https://github.com/igrr/esptool-ck)
