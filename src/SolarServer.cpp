@@ -15,7 +15,8 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-  upload the contents of the data folder with MkSPIFFS Tool ("ESP8266 Sketch Data Upload" in Tools menu in Arduino IDE)
+  upload the contents of the data folder with MkSPIFFS Tool
+  ("ESP8266 Sketch Data Upload" in Tools menu in Arduino IDE)
   or you can upload the contents of a folder if you CD in that folder and run the following command:
   for file in `ls -A1`; do curl -F "file=@$PWD/$file" esp8266fs.local/edit; done
 
@@ -33,7 +34,7 @@
 const char* ssid = "SFO";
 const char* password = "12341234";
 const char* host = "solar-server";
-const char* configPath = "config.txt";
+const char* configFile = "config.txt";
 
 ESP8266WebServer server(80);
 //holds the current upload
@@ -69,24 +70,28 @@ String getContentType(String filename){
   return "text/plain";
 }
 
-void handleRoot() {
-	server.send(200, "text/html", "<h1>You are connected</h1>");
-}
+bool handleFileRead(String path) {
 
-bool handleFileRead(String path){
   DBG_OUTPUT_PORT.println("handleFileRead: " + path);
-  if(path.endsWith("/")) path += "index.htm";
+
+  if (path.endsWith("/")) path += "index.htm";
+
   String contentType = getContentType(path);
   String pathWithGz = path + ".gz";
-  if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)){
-    if(SPIFFS.exists(pathWithGz))
-      path += ".gz";
+
+  if (SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {
+
+    if (SPIFFS.exists(pathWithGz)) path += ".gz";
+
     File file = SPIFFS.open(path, "r");
     size_t sent = server.streamFile(file, contentType);
     file.close();
     return true;
+
   }
+
   return false;
+
 }
 
 void handleFileUpload(){
@@ -122,7 +127,7 @@ void handleFileDelete(){
   path = String();
 }
 
-void handleFileCreate(){
+void handleFileCreate() {
   if(server.args() == 0)
     return server.send(500, "text/plain", "BAD ARGS");
   String path = server.arg(0);
@@ -165,7 +170,14 @@ void handleFileList() {
   server.send(200, "text/json", output);
 }
 
-void setup(void){
+bool handleAPConfig() {
+	// server.send(200, "text/html", "<h1>You are connected</h1>");
+  String configRoute = "/config.htm";
+  return handleFileRead(configRoute);
+
+}
+
+void setup(void) {
 
   // Serial Init
 
@@ -186,24 +198,29 @@ void setup(void){
   // if no config.ini exists, run AP mode, else run in client mode
 
 
-  if (!SPIFFS.exists(configPath)) {
+  if (!SPIFFS.exists(configFile)) {
 
     // AP Init
-    Serial.print("Configuring access point...");
+    Serial.print("Starting AP Mode...");
   	/* AP to be open with the same host name */
   	WiFi.softAP(host);
 
   	IPAddress myIP = WiFi.softAPIP();
-  	Serial.print("AP IP address: ");
+
+    Serial.print("AP IP address: ");
   	Serial.println(myIP);
-  	server.on("/", handleRoot);
-  	server.begin();
-  	Serial.println("HTTP server started");
+
+    // have the server handle AP config on default route
+    server.on("/", handleAPConfig);
+
+  	Serial.println("HTTP server started in AP mode");
+
 
   } else {
 
     //WIFI INIT
     DBG_OUTPUT_PORT.printf("Connecting to %s\n", ssid);
+
     if (String(WiFi.SSID()) != String(ssid)) {
       WiFi.begin(ssid, password);
     }
@@ -212,52 +229,58 @@ void setup(void){
       delay(500);
       DBG_OUTPUT_PORT.print(".");
     }
+
     DBG_OUTPUT_PORT.println("");
     DBG_OUTPUT_PORT.print("Connected! IP address: ");
     DBG_OUTPUT_PORT.println(WiFi.localIP());
-
-    MDNS.begin(host);
     DBG_OUTPUT_PORT.print("Open http://");
     DBG_OUTPUT_PORT.print(host);
     DBG_OUTPUT_PORT.println(".local/edit to see the file browser");
 
-
-    //SERVER INIT
-    //list directory
-    server.on("/list", HTTP_GET, handleFileList);
-    //load editor
-    server.on("/edit", HTTP_GET, [](){
-      if(!handleFileRead("/edit.htm")) server.send(404, "text/plain", "FileNotFound");
-    });
-    //create file
-    server.on("/edit", HTTP_PUT, handleFileCreate);
-    //delete file
-    server.on("/edit", HTTP_DELETE, handleFileDelete);
-    //first callback is called after the request has ended with all parsed arguments
-    //second callback handles file uploads at that location
-    server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
-
-    //called when the url is not defined here
-    //use it to load content from SPIFFS
-    server.onNotFound([](){
-      if(!handleFileRead(server.uri()))
-        server.send(404, "text/plain", "FileNotFound");
-    });
-
-    //get heap status, analog input value and all GPIO statuses in one json call
-    server.on("/all", HTTP_GET, [](){
-      String json = "{";
-      json += "\"heap\":"+String(ESP.getFreeHeap());
-      json += ", \"analog\":"+String(analogRead(A0));
-      json += ", \"gpio\":"+String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
-      json += "}";
-      server.send(200, "text/json", json);
-      json = String();
-    });
-    server.begin();
-    DBG_OUTPUT_PORT.println("solar-server started");
-
   }
+
+  //mdns helper
+  MDNS.begin(host);
+
+  //server routing
+  server.on("/list", HTTP_GET, handleFileList);
+
+  //load editor
+  server.on("/edit", HTTP_GET, [](){
+    if(!handleFileRead("/edit.htm")) server.send(404, "text/plain", "FileNotFound");
+  });
+
+  //create file
+  server.on("/edit", HTTP_PUT, handleFileCreate);
+
+  //delete file
+  server.on("/edit", HTTP_DELETE, handleFileDelete);
+
+  //first callback is called after the request has ended with all parsed arguments
+  //second callback handles file uploads at that location
+  server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
+
+  //called when the url is not defined here
+  //use it to load content from SPIFFS
+  server.onNotFound([](){
+    if(!handleFileRead(server.uri()))
+      server.send(404, "text/plain", "FileNotFound");
+  });
+
+  //get heap status, analog input value and all GPIO statuses in one json call
+  server.on("/all", HTTP_GET, [](){
+    String json = "{";
+    json += "\"heap\":"+String(ESP.getFreeHeap());
+    json += ", \"analog\":"+String(analogRead(A0));
+    json += ", \"gpio\":"+String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
+    json += "}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+
+  //start HTTP server
+  server.begin();
+  DBG_OUTPUT_PORT.println("solar-server started");
 
 
 }
