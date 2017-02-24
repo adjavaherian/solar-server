@@ -1,74 +1,32 @@
 /*
-  FSWebServer - Example WebServer with SPIFFS backend for esp8266
-  Copyright (c) 2015 Hristo Gochkov. All rights reserved.
-  This file is part of the ESP8266WebServer library for Arduino environment.
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  Solar Server
+  esp8266 with access point mode and client ssid config
 
-  upload the contents of the data folder with MkSPIFFS Tool
-  ("ESP8266 Sketch Data Upload" in Tools menu in Arduino IDE)
-  or you can upload the contents of a folder if you CD in that folder and run the following command:
-  for file in `ls -A1`; do curl -F "file=@$PWD/$file" esp8266fs.local/edit; done
+  Based on FSWebServer
+  https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WebServer/examples/FSBrowser/FSBrowser.ino
 
   access the sample web page at http://esp8266fs.local
   edit the page by going to http://esp8266fs.local/edit
 */
+
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <FS.h>
+#include <Config.hpp>
+#include <Utils.hpp>
 
 #define DBG_OUTPUT_PORT Serial
 
-const char* ssid = "SFO";
-const char* password = "12341234";
 const char* host = "solar-server";
 const char* configFile = "config.txt";
 
+// instances for config and server and upload file
+Config config(configFile);
 ESP8266WebServer server(80);
-//holds the current upload
 File fsUploadFile;
-
-//format bytes
-String formatBytes(size_t bytes){
-  if (bytes < 1024){
-    return String(bytes)+"B";
-  } else if(bytes < (1024 * 1024)){
-    return String(bytes/1024.0)+"KB";
-  } else if(bytes < (1024 * 1024 * 1024)){
-    return String(bytes/1024.0/1024.0)+"MB";
-  } else {
-    return String(bytes/1024.0/1024.0/1024.0)+"GB";
-  }
-}
-
-String getContentType(String filename){
-  if(server.hasArg("download")) return "application/octet-stream";
-  else if(filename.endsWith(".htm")) return "text/html";
-  else if(filename.endsWith(".html")) return "text/html";
-  else if(filename.endsWith(".css")) return "text/css";
-  else if(filename.endsWith(".js")) return "application/javascript";
-  else if(filename.endsWith(".png")) return "image/png";
-  else if(filename.endsWith(".gif")) return "image/gif";
-  else if(filename.endsWith(".jpg")) return "image/jpeg";
-  else if(filename.endsWith(".ico")) return "image/x-icon";
-  else if(filename.endsWith(".xml")) return "text/xml";
-  else if(filename.endsWith(".pdf")) return "application/x-pdf";
-  else if(filename.endsWith(".zip")) return "application/x-zip";
-  else if(filename.endsWith(".gz")) return "application/x-gzip";
-  return "text/plain";
-}
 
 bool handleFileRead(String path) {
 
@@ -76,7 +34,7 @@ bool handleFileRead(String path) {
 
   if (path.endsWith("/")) path += "index.htm";
 
-  String contentType = getContentType(path);
+  String contentType = getContentType(path, server.hasArg("download"));
   String pathWithGz = path + ".gz";
 
   if (SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {
@@ -94,7 +52,7 @@ bool handleFileRead(String path) {
 
 }
 
-void handleFileUpload(){
+void handleFileUpload() {
   if(server.uri() != "/edit") return;
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START){
@@ -114,7 +72,7 @@ void handleFileUpload(){
   }
 }
 
-void handleFileDelete(){
+void handleFileDelete() {
   if(server.args() == 0) return server.send(500, "text/plain", "BAD ARGS");
   String path = server.arg(0);
   DBG_OUTPUT_PORT.println("handleFileDelete: " + path);
@@ -177,68 +135,70 @@ bool handleAPConfig() {
 
 }
 
-void setup(void) {
+bool handleConfigPost() {
 
-  // Serial Init
+  String tryAgain = "/try_again.htm";
+  String SSID = "SSID";
+  String PASSWORD = "PASSWORD";
 
-  DBG_OUTPUT_PORT.begin(115200);
-  DBG_OUTPUT_PORT.println();
-  DBG_OUTPUT_PORT.setDebugOutput(true);
-  SPIFFS.begin();
-  {
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      DBG_OUTPUT_PORT.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    }
-    DBG_OUTPUT_PORT.printf("\n");
+  if(server.args() == 0)
+    return handleFileRead(tryAgain);
+
+  String client_ssid = server.arg(0);
+  String client_password = server.arg(1);
+  DBG_OUTPUT_PORT.println("handleConfigPost: " + client_ssid + ":" + client_password);
+
+  if(client_ssid.length() == 0)
+    return handleFileRead(tryAgain);
+
+  // apply the new settings to the config class
+  // and write them to file
+  config.applyConfigSetting(SSID, client_ssid);
+  config.applyConfigSetting(PASSWORD, client_password);
+  config.writeConfigSettings();
+
+}
+
+void apMode() {
+  // AP Init
+  Serial.print("Starting AP Mode...");
+  /* AP to be open with the same host name */
+  WiFi.softAP(host);
+
+  IPAddress myIP = WiFi.softAPIP();
+
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+
+  // have the server handle AP config on default route
+  server.on("/", handleAPConfig);
+
+  Serial.println("HTTP server started in AP mode");
+}
+
+void clientMode(String ssid, String password) {
+
+  //WIFI INIT
+  // DBG_OUTPUT_PORT.printf("Connecting to \n", ssid);
+
+  if (String(WiFi.SSID()) != String(ssid)) {
+    WiFi.begin(ssid.c_str(), password.c_str());
   }
 
-  // if no config.ini exists, run AP mode, else run in client mode
-
-
-  if (!SPIFFS.exists(configFile)) {
-
-    // AP Init
-    Serial.print("Starting AP Mode...");
-  	/* AP to be open with the same host name */
-  	WiFi.softAP(host);
-
-  	IPAddress myIP = WiFi.softAPIP();
-
-    Serial.print("AP IP address: ");
-  	Serial.println(myIP);
-
-    // have the server handle AP config on default route
-    server.on("/", handleAPConfig);
-
-  	Serial.println("HTTP server started in AP mode");
-
-
-  } else {
-
-    //WIFI INIT
-    DBG_OUTPUT_PORT.printf("Connecting to %s\n", ssid);
-
-    if (String(WiFi.SSID()) != String(ssid)) {
-      WiFi.begin(ssid, password);
-    }
-
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      DBG_OUTPUT_PORT.print(".");
-    }
-
-    DBG_OUTPUT_PORT.println("");
-    DBG_OUTPUT_PORT.print("Connected! IP address: ");
-    DBG_OUTPUT_PORT.println(WiFi.localIP());
-    DBG_OUTPUT_PORT.print("Open http://");
-    DBG_OUTPUT_PORT.print(host);
-    DBG_OUTPUT_PORT.println(".local/edit to see the file browser");
-
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    DBG_OUTPUT_PORT.print(".");
   }
 
+  DBG_OUTPUT_PORT.println("");
+  DBG_OUTPUT_PORT.print("Connected! IP address: ");
+  DBG_OUTPUT_PORT.println(WiFi.localIP());
+  DBG_OUTPUT_PORT.print("Open http://");
+  DBG_OUTPUT_PORT.print(host);
+  DBG_OUTPUT_PORT.println(".local/edit to see the file browser");
+}
+
+void startServer() {
   //mdns helper
   MDNS.begin(host);
 
@@ -278,10 +238,58 @@ void setup(void) {
     json = String();
   });
 
+  //get config form posts
+  server.on("/config", HTTP_POST, handleConfigPost);
+
   //start HTTP server
   server.begin();
   DBG_OUTPUT_PORT.println("solar-server started");
+}
 
+void setup(void) {
+
+  // Serial Init
+
+  DBG_OUTPUT_PORT.begin(115200);
+  DBG_OUTPUT_PORT.println();
+  DBG_OUTPUT_PORT.setDebugOutput(true);
+  SPIFFS.begin();
+  {
+    Dir dir = SPIFFS.openDir("/");
+    while (dir.next()) {
+      String fileName = dir.fileName();
+      size_t fileSize = dir.fileSize();
+      DBG_OUTPUT_PORT.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
+    }
+    DBG_OUTPUT_PORT.printf("\n");
+  }
+
+
+  // if no config.txt exists, run AP mode, else run in client mode
+  if (!config.exists()) {
+
+    apMode();
+
+  } else {
+
+    Serial.println("attempting config read...");
+    config.readConfigSettings();
+    Serial.print("SSID=");
+
+    String ssid = config.ssid();
+    String password = config.password();
+
+    Serial.println(config.ssid());
+
+    if (ssid.length() == 0) {
+      apMode();
+    } else {
+      clientMode(ssid, password);
+    }
+
+  }
+
+  startServer();
 
 }
 

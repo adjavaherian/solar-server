@@ -6,12 +6,24 @@
 </head>
 <body id="index" style="margin:0; padding:0;" onload="onBodyLoad()">
   <div id="controls" style="display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);">
-    <h1>Welcome to Solar Server Config</h1>
-    <p>Your server is running in AP mode.  In order to connect to the Internet, please provide an SSID configuration.</p>
-    <label>SSID:</label>
-    <input type="text" id="ssid" />
-    <input type="password" id="password" />
-    <input type="button" id="start-button" value="Connect"/>
+    <div>
+      <h1>Welcome to Solar Server Config</h1>
+      <p>Your server is running in AP mode.  In order to connect to the Internet, please provide an SSID configuration.</p>
+    </div>
+    <form action="/config" method="post">
+      <div>
+        <label>SSID:</label>
+        <input type="text" name="ssid" />
+      </div>
+      <div>
+        <label>Password:</label>
+        <input type="password" name="password" />
+      </div>
+      <div>
+        <input type="submit" id="start-button" value="Save"/>
+        <input type="reset" id="start-button" value="Reset"/>
+      </div>
+    </form>
   </div>
 </body>
 </html>

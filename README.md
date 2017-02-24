@@ -49,6 +49,10 @@ Once you get Platform setup on Atom, you should be able to sync the code to the 
 ## Platform.io for development
 There are two code bases in this repo, one for Arduino `./SolarServer` and one for Platform.io `./src`.  Notice the code is pretty much the same as the Arduino code, but you have a .cpp extension as opposed to .ino for Arduino based builds.  Also for Platform, your data assets that you want on the filesystem, should be in `./data`.  This is configurable in `./platformio.ini`.
 
+Files should be built and uploaded like so
+`platformio run --target buildfs`
+`platformio run --target uploadfs`
+
 ## Etc.
 * [ESP Tools](https://github.com/igrr/esptool-ck)
 * [SPI Filesystem](https://github.com/pellepl/spiffs)
