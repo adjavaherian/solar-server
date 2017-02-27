@@ -6,9 +6,11 @@
   Based on FSWebServer
   https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WebServer/examples/FSBrowser/FSBrowser.ino
 
-  access the sample web page at http://esp8266fs.local
-  edit the page by going to http://esp8266fs.local/edit
+  access the sample web page at http://solar-server.local
+  edit the page by going to http://solar-server.local/edit
 */
+
+#ifndef UNIT_TEST  // IMPORTANT LINE!
 
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
@@ -138,6 +140,7 @@ bool handleAPConfig() {
 bool handleConfigPost() {
 
   String tryAgain = "/try_again.htm";
+  String success = "/success.htm";
   String SSID = "SSID";
   String PASSWORD = "PASSWORD";
 
@@ -155,50 +158,35 @@ bool handleConfigPost() {
   // and write them to file
   config.applyConfigSetting(SSID, client_ssid);
   config.applyConfigSetting(PASSWORD, client_password);
-  config.writeConfigSettings();
 
-}
-
-void apMode() {
-  // AP Init
-  Serial.print("Starting AP Mode...");
-  /* AP to be open with the same host name */
-  WiFi.softAP(host);
-
-  IPAddress myIP = WiFi.softAPIP();
-
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
-
-  // have the server handle AP config on default route
-  server.on("/", handleAPConfig);
-
-  Serial.println("HTTP server started in AP mode");
-}
-
-void clientMode(String ssid, String password) {
-
-  //WIFI INIT
-  // DBG_OUTPUT_PORT.printf("Connecting to \n", ssid);
-
-  if (String(WiFi.SSID()) != String(ssid)) {
-    WiFi.begin(ssid.c_str(), password.c_str());
+  if(config.writeConfigSettings()) {
+    return handleFileRead(success);
+    //restart here
   }
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    DBG_OUTPUT_PORT.print(".");
-  }
-
-  DBG_OUTPUT_PORT.println("");
-  DBG_OUTPUT_PORT.print("Connected! IP address: ");
-  DBG_OUTPUT_PORT.println(WiFi.localIP());
-  DBG_OUTPUT_PORT.print("Open http://");
-  DBG_OUTPUT_PORT.print(host);
-  DBG_OUTPUT_PORT.println(".local/edit to see the file browser");
 }
+
+bool handleConfigReset() {
+
+  String reset = "/reset.htm";
+  String tryAgain = "/try_again.htm";
+
+  DBG_OUTPUT_PORT.println("handleConfigReset...");
+
+  config.resetConfigSettings();
+  if (config.writeConfigSettings()) {
+    return handleFileRead(reset);
+    //restart here
+  }
+  return handleFileRead(tryAgain);
+
+}
+
 
 void startServer() {
+
+  Serial.println("starting router");
+
   //mdns helper
   MDNS.begin(host);
 
@@ -241,9 +229,71 @@ void startServer() {
   //get config form posts
   server.on("/config", HTTP_POST, handleConfigPost);
 
+  //handle config reset
+  server.on("/reset", HTTP_POST, handleConfigReset);
+
   //start HTTP server
   server.begin();
   DBG_OUTPUT_PORT.println("solar-server started");
+}
+
+
+void apMode() {
+  // AP Init
+  Serial.print("Starting AP Mode...");
+
+  /* AP to be open with the same host name */
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(host);
+
+  IPAddress myIP = WiFi.softAPIP();
+
+  Serial.print("AP IP address: " + myIP);
+  Serial.println();
+
+  // start server and have the server handle AP config on default route
+  startServer();
+  server.on("/", handleAPConfig);
+
+  Serial.println("HTTP server started in AP mode");
+}
+
+void clientMode(String ssid, String password) {
+
+
+  //WIFI INIT
+  DBG_OUTPUT_PORT.println("Connecting to: " + ssid);
+
+  Serial.println("currently configured SSID: " + String(WiFi.SSID()));
+
+  if (String(WiFi.SSID()) != String(ssid)) {
+    Serial.println("new ssid encountered...");
+    WiFi.begin(ssid.c_str(), password.c_str());
+  }
+
+  // try reconnect 4 times, then apMode.
+  int count = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    DBG_OUTPUT_PORT.println("waiting for re-connect" + String(WiFi.status()));
+    delay(500);
+    count++;
+    if (count == 10) {
+      WiFi.disconnect();
+      return apMode();
+    }
+  }
+
+  // debug
+  DBG_OUTPUT_PORT.println("");
+  DBG_OUTPUT_PORT.print("Connected! IP address: ");
+  DBG_OUTPUT_PORT.println(WiFi.localIP());
+  DBG_OUTPUT_PORT.print("Open http://");
+  DBG_OUTPUT_PORT.print(host);
+  DBG_OUTPUT_PORT.println(".local to see the file browser");
+
+  // start the server
+  startServer();
+
 }
 
 void setup(void) {
@@ -253,6 +303,8 @@ void setup(void) {
   DBG_OUTPUT_PORT.begin(115200);
   DBG_OUTPUT_PORT.println();
   DBG_OUTPUT_PORT.setDebugOutput(true);
+
+  // SPIFFS setup
   SPIFFS.begin();
   {
     Dir dir = SPIFFS.openDir("/");
@@ -264,9 +316,12 @@ void setup(void) {
     DBG_OUTPUT_PORT.printf("\n");
   }
 
+  // disable ssid caching
+  ESP.flashEraseSector(0x3fe);
+  WiFi.persistent(false);
 
   // if no config.txt exists, run AP mode, else run in client mode
-  if (!config.exists()) {
+  if ( !config.exists() ) {
 
     apMode();
 
@@ -289,10 +344,10 @@ void setup(void) {
 
   }
 
-  startServer();
-
 }
 
 void loop(void){
   server.handleClient();
 }
+
+#endif

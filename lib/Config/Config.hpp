@@ -18,6 +18,8 @@ class Config
     const String& ssid();
     const String& password();
     bool writeConfigSettings();
+    void removeConfigFile();
+    void resetConfigSettings();
   private:
     String _configPath;
     String _ssid;

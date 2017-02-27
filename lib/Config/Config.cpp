@@ -87,7 +87,39 @@ void Config::applyConfigSetting(String settingName, String settingValue)
 
 bool Config::writeConfigSettings()
 {
-  
+    // Delete the old One
+    removeConfigFile();
+
+    // Create new one
+    File myFile = SPIFFS.open(_configPath, "w");
+    // writing in the file works just like regular print()/println() function
+    myFile.print("[");
+    myFile.print("SSID=");
+    myFile.print(_ssid);
+    myFile.println("]");
+    myFile.print("[");
+    myFile.print("PASSWORD=");
+    myFile.print(_password);
+    myFile.println("]");
+
+    // close the file:
+    myFile.close();
+    Serial.println("Writing done.");
+    readConfigSettings();
+    return SPIFFS.exists(_configPath);
+
+}
+
+void Config::resetConfigSettings() {
+    String SSID = "SSID";
+    String PASSWORD = "PASSWORD";
+    String empty = "";
+    applyConfigSetting(SSID, empty);
+    applyConfigSetting(PASSWORD, empty);    
+}
+
+void Config::removeConfigFile() {
+  SPIFFS.remove(_configPath);
 }
 
 const String& Config::ssid()
