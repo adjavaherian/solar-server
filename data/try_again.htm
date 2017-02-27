@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Solar Server AP Mode</title>
+</head>
+<body id="index" style="margin:0; padding:0;" onload="onBodyLoad()">
+  <div id="controls" style="display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);">
+    <div>
+      <h1>Try Again</h1>
+      <p>Please provide an SSID in order to connect to the Internet.</p>
+    </div>
+    <form action="/config" method="post">
+      <div>
+        <label>SSID:</label>
+        <input type="text" name="ssid" />
+      </div>
+      <div>
+        <label>Password:</label>
+        <input type="password" name="password" />
+      </div>
+      <div>
+        <input type="submit" id="start-button" value="Save"/>
+        <input type="reset" id="start-button" value="Reset"/>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
