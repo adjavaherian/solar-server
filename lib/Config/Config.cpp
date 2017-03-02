@@ -3,8 +3,8 @@
 */
 #include "Config.hpp"
 
-Config::Config(){
-  _configPath = Config::_configPath;
+Config::Config(): Config("config.txt") {
+
 }
 
 Config::Config(String path)

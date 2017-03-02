@@ -5,7 +5,7 @@
 
 #include "SolarServer.hpp"
 
-SolarServer::SolarServer(ESP8266WebServer& _server): server(_server){}
+SolarServer::SolarServer(int port): server(port){}
 
 bool SolarServer::handleAPConfig() {
   // server.send(200, "text/html", "<h1>You are connected</h1>");
@@ -228,8 +228,8 @@ void SolarServer::startRouter() {
   //handle config reset
   server.on("/reset", HTTP_POST, std::bind(&SolarServer::handleConfigReset, this));
   //
-  // //capture cam
-  // server.on("/capture", HTTP_GET, serverCapture);
+  //capture cam
+  // server.on("/capture", HTTP_GET, std::bind(&SolarCamera::serverCapture, this, server));
   //
   // //stream
   // server.on("/stream", HTTP_GET, serverStream);

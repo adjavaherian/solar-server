@@ -6,13 +6,14 @@
 
 #include <ESP8266WebServer.h>
 #include <FS.h>
+#include <SolarCamera.hpp>
 #include <Utils.hpp>
 #include <Config.hpp>
 
 class SolarServer
 {
   public:
-    SolarServer(ESP8266WebServer& server);
+    SolarServer(int port);
     void startRouter();
     bool handleAPConfig();
     void handleClient();
@@ -28,7 +29,7 @@ class SolarServer
     void handleNotFound();
   private:
   protected:
-   ESP8266WebServer& server;
+   ESP8266WebServer server;
 };
 
 #endif
