@@ -12,6 +12,7 @@ class Config
 {
   public:
     Config(String path);
+    Config();
     bool exists();
     void readConfigSettings();
     void applyConfigSetting(String settingName, String settingValue);
@@ -20,6 +21,7 @@ class Config
     bool writeConfigSettings();
     void removeConfigFile();
     void resetConfigSettings();
+    const char* configFile = "config.txt";
   private:
     String _configPath;
     String _ssid;

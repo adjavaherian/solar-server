@@ -39,3 +39,7 @@ jspm_packages
 .piolibdeps
 .clang_complete
 .gcc-flags.json
+
+# resources
+ArduCAM_ESP8266_UNO/
+*.pdf

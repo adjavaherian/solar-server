@@ -3,6 +3,10 @@
 */
 #include "Config.hpp"
 
+Config::Config(){
+  _configPath = Config::_configPath;
+}
+
 Config::Config(String path)
 {
   if(!path.startsWith("/")) path = "/" + path;
@@ -115,7 +119,7 @@ void Config::resetConfigSettings() {
     String PASSWORD = "PASSWORD";
     String empty = "";
     applyConfigSetting(SSID, empty);
-    applyConfigSetting(PASSWORD, empty);    
+    applyConfigSetting(PASSWORD, empty);
 }
 
 void Config::removeConfigFile() {
