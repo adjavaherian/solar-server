@@ -193,9 +193,22 @@ void SolarServer::handleGetHeap() {
   json = String();
 }
 
+void SolarServer::handleServerCapture() {
+  Serial.println("handleServerCapture");
+  SolarCamera sc;
+  sc.serverCapture(server);
+}
+
+void SolarServer::handleServerStream() {
+  Serial.println("handleServerStream");
+  SolarCamera sc;
+  sc.serverStream(server);
+}
+
 void SolarServer::startRouter() {
 
   String edit = "/edit.htm";
+  // server.on("/", HTTP_GET, std::bind(&SolarServer::handleAPConfig, this));
 
   Serial.println("starting router");
 
@@ -228,12 +241,12 @@ void SolarServer::startRouter() {
   //handle config reset
   server.on("/reset", HTTP_POST, std::bind(&SolarServer::handleConfigReset, this));
   //
-  //capture cam
-  // server.on("/capture", HTTP_GET, std::bind(&SolarCamera::serverCapture, this, server));
+  // capture cam
+  server.on("/capture", HTTP_GET, std::bind(&SolarServer::handleServerCapture, this));
   //
-  // //stream
-  // server.on("/stream", HTTP_GET, serverStream);
-
+  //stream
+  server.on("/stream", HTTP_GET, std::bind(&SolarServer::handleServerStream, this));
+  //
   //start HTTP server
   server.begin();
   Serial.println("solar-server started");

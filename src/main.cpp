@@ -30,16 +30,16 @@ void apMode() {
   // AP to be open with the same host name
   WiFi.mode(WIFI_AP);
   WiFi.softAP(host);
-
   IPAddress myIP = WiFi.softAPIP();
 
   Serial.print("AP IP address: " + myIP);
   Serial.println();
 
+  // mdns helper
+  MDNS.begin(host);
+
   // start server and have the server handle AP config on default route
   server.startRouter();
-  // need to write a router override public method
-  // server.on("/", handleAPConfig);
 
   Serial.println("HTTP server started in AP mode");
 }
@@ -92,7 +92,6 @@ void clientMode(String ssid, String password) {
 void setup(void) {
 
   // Serial Init
-
   Serial.begin(115200);
   Serial.println();
   Serial.setDebugOutput(true);
@@ -109,12 +108,10 @@ void setup(void) {
     Serial.printf("\n");
   }
 
-  // Arducam setup
-  // arduCamSetup();
-
-  // disable ssid caching
+  // disable ssid caching // debug
   // WiFi.persistent(false);
   // WiFi.forceSleepWake();
+  // return apMode();
 
   // if no config.txt exists, run AP mode, else run in client mode
   if ( !config.exists() ) {

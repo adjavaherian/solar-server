@@ -27,6 +27,8 @@ class SolarServer
     bool handleFileRead(String path);
     void handleGetHeap();
     void handleNotFound();
+    void handleServerCapture();
+    void handleServerStream();
   private:
   protected:
    ESP8266WebServer server;

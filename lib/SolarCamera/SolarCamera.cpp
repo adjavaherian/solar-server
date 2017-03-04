@@ -4,7 +4,9 @@
 
 #include <SolarCamera.hpp>
 
-SolarCamera::SolarCamera() : myCAM(OV2640, CS) {}
+SolarCamera::SolarCamera() : myCAM(OV2640, CS) {
+  SolarCamera::setup();
+}
 
 void SolarCamera::setup() {
   uint8_t vid, pid;

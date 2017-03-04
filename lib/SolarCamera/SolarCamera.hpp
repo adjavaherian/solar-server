@@ -10,7 +10,6 @@
 #include <Wire.h>
 #include <WiFiClient.h>
 #include <SPI.h>
-#include <ESP8266WebServer.h>
 #include "memorysaver.h"
 
 class SolarCamera
