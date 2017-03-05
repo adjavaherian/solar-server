@@ -16,6 +16,7 @@
 #include <ESP8266mDNS.h>
 #include <SolarServer.hpp>
 #include <Config.hpp>
+#include <SDController.hpp>
 
 const char* host = "solar-server";
 
@@ -99,7 +100,7 @@ void setup(void) {
   // SPIFFS setup
   SPIFFS.begin();
   {
-    Dir dir = SPIFFS.openDir("/");
+    fs::Dir dir = SPIFFS.openDir("/");
     while (dir.next()) {
       String fileName = dir.fileName();
       size_t fileSize = dir.fileSize();
@@ -107,6 +108,9 @@ void setup(void) {
     }
     Serial.printf("\n");
   }
+
+  //SDController init
+  SDController sdc;
 
   // disable ssid caching // debug
   // WiFi.persistent(false);

@@ -28,7 +28,7 @@ void Config::readConfigSettings()
   char character;
   String settingName;
   String settingValue;
-  File myFile = SPIFFS.open(_configPath, "r");
+  fs::File myFile = SPIFFS.open(_configPath, "r");
 
   if (myFile) {
 
@@ -95,7 +95,7 @@ bool Config::writeConfigSettings()
     removeConfigFile();
 
     // Create new one
-    File myFile = SPIFFS.open(_configPath, "w");
+    fs::File myFile = SPIFFS.open(_configPath, "w");
     // writing in the file works just like regular print()/println() function
     myFile.print("[");
     myFile.print("SSID=");

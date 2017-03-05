@@ -73,7 +73,7 @@ void SolarServer::handleFileCreate() {
     return server.send(500, "text/plain", "BAD PATH");
   if(SPIFFS.exists(path))
     return server.send(500, "text/plain", "FILE EXISTS");
-  File file = SPIFFS.open(path, "w");
+  fs::File file = SPIFFS.open(path, "w");
   if(file)
     file.close();
   else
@@ -113,7 +113,7 @@ bool SolarServer::handleFileRead(String path) {
 
     if (SPIFFS.exists(pathWithGz)) path += ".gz";
 
-    File file = SPIFFS.open(path, "r");
+    fs::File file = SPIFFS.open(path, "r");
     size_t sent = server.streamFile(file, contentType);
     file.close();
 
@@ -134,12 +134,12 @@ void SolarServer::handleFileList() {
 
   String path = server.arg("dir");
   Serial.println("handleFileList: " + path);
-  Dir dir = SPIFFS.openDir(path);
+  fs::Dir dir = SPIFFS.openDir(path);
   path = String();
 
   String output = "[";
   while(dir.next()){
-    File entry = dir.openFile("r");
+    fs::File entry = dir.openFile("r");
     if (output != "[") output += ',';
     bool isDir = false;
     output += "{\"type\":\"";
@@ -156,7 +156,7 @@ void SolarServer::handleFileList() {
 
 void SolarServer::handleFileUpload() {
 
-  File fsUploadFile;
+  fs::File fsUploadFile;
 
   if(server.uri() != "/edit") return;
   HTTPUpload& upload = server.upload();

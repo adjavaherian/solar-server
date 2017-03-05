@@ -4,6 +4,8 @@
 #ifndef SOLARSERVER_H
 #define SOLARSERVER_H
 
+#define FS_NO_GLOBALS
+
 #include <ESP8266WebServer.h>
 #include <FS.h>
 #include <SolarCamera.hpp>

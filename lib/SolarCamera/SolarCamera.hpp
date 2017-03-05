@@ -4,8 +4,9 @@
 #ifndef SOLARCAMERA_H
 #define SOLARCAMERA_H
 
+#define FS_NO_GLOBALS
+
 #include <ESP8266WebServer.h>
-#include <FS.h>
 #include <ArduCAM.h>
 #include <Wire.h>
 #include <WiFiClient.h>

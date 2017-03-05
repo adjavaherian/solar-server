@@ -5,6 +5,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#define FS_NO_GLOBALS
+
 #include <FS.h>
 #include "Arduino.h"
 
