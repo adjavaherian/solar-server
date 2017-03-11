@@ -196,27 +196,33 @@ void SolarServer::handleGetHeap() {
 void SolarServer::handleServerCapture() {
   Serial.println("handleServerCapture");
   SolarCamera sc;
-  sc.serverCapture(server);
+  return sc.serverCapture(server);
 }
 
 void SolarServer::handleServerStream() {
   Serial.println("handleServerStream");
   SolarCamera sc;
-  sc.serverStream(server);
+  return sc.serverStream(server);
 }
 
-void SolarServer::startRouter() {
+void SolarServer::handleCaptureFile() {
+  Serial.println("handle file capture");
+  SolarCamera sc;
+  sc.captureToSDFile();
+  return server.send(200, "text/plain", "captured");
+}
 
-  String edit = "/edit.htm";
-  // server.on("/", HTTP_GET, std::bind(&SolarServer::handleAPConfig, this));
+void SolarServer::startRouter(String indexPath) {
 
-  Serial.println("starting router");
+  Serial.println("starting router with index " + indexPath);
+
+  server.on("/", HTTP_GET, std::bind(&SolarServer::handleFileRead, this, indexPath));
 
   //server routing
   server.on("/list", HTTP_GET, std::bind(&SolarServer::handleFileList, this));
 
   //load editor
-  server.on("/edit", HTTP_GET, std::bind(&SolarServer::handleFileRead, this, edit));
+  server.on("/edit", HTTP_GET, std::bind(&SolarServer::handleFileRead, this, "/edit.htm"));
 
   //create file
   server.on("/edit", HTTP_PUT, std::bind(&SolarServer::handleFileCreate, this));
@@ -228,10 +234,6 @@ void SolarServer::startRouter() {
   //second callback handles file uploads at that location
   server.on("/edit", HTTP_POST, std::bind(&SolarServer::handleEmptyResponse, this), std::bind(&SolarServer::handleFileUpload, this));
 
-  //called when the url is not defined here
-  //use it to load content from SPIFFS
-  server.onNotFound(std::bind(&SolarServer::handleNotFound, this));
-
   //get heap status, analog input value and all GPIO statuses in one json call
   server.on("/all", HTTP_GET, std::bind(&SolarServer::handleGetHeap, this));
 
@@ -240,13 +242,20 @@ void SolarServer::startRouter() {
 
   //handle config reset
   server.on("/reset", HTTP_POST, std::bind(&SolarServer::handleConfigReset, this));
-  //
+
   // capture cam
   server.on("/capture", HTTP_GET, std::bind(&SolarServer::handleServerCapture, this));
-  //
+
   //stream
   server.on("/stream", HTTP_GET, std::bind(&SolarServer::handleServerStream, this));
-  //
+
+  //capture file
+  server.on("/capture-file", HTTP_GET, std::bind(&SolarServer::handleCaptureFile, this));
+
+  //called when the url is not defined here
+  //use it to load content from SPIFFS
+  server.onNotFound(std::bind(&SolarServer::handleNotFound, this));
+
   //start HTTP server
   server.begin();
   Serial.println("solar-server started");

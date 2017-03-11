@@ -10,13 +10,11 @@
   edit the page by going to http://solar-server.local/edit
 */
 
-#ifndef UNIT_TEST  // IMPORTANT LINE!
-
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <SolarServer.hpp>
 #include <Config.hpp>
-#include <SDController.hpp>
+#include <Utils.hpp>
 
 const char* host = "solar-server";
 
@@ -40,27 +38,22 @@ void apMode() {
   MDNS.begin(host);
 
   // start server and have the server handle AP config on default route
-  server.startRouter();
+  String indexPath = "/config.htm";
+  server.startRouter(indexPath);
 
   Serial.println("HTTP server started in AP mode");
 }
 
 void clientMode(String ssid, String password) {
 
-
   //WIFI INIT
   Serial.println("Connecting to: " + ssid);
 
   Serial.println("currently configured SSID: " + String(WiFi.SSID()));
 
-  // if (String(WiFi.SSID()) != String(ssid)) {
-  //
-  // }
-
   Serial.println("new ssid encountered..." + ssid);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
-
 
   // mdns helper
   MDNS.begin(host);
@@ -72,7 +65,6 @@ void clientMode(String ssid, String password) {
     delay(500);
     count++;
     if (count == 10) {
-      // WiFi.disconnect();
       return apMode();
     }
   }
@@ -86,9 +78,12 @@ void clientMode(String ssid, String password) {
   Serial.println(".local to see the file browser");
 
   // start the server
-  server.startRouter();
+  String indexPath = "/";
+  server.startRouter(indexPath);
 
 }
+
+#ifndef UNIT_TEST  // IMPORTANT LINE!
 
 void setup(void) {
 
@@ -108,9 +103,6 @@ void setup(void) {
     }
     Serial.printf("\n");
   }
-
-  //SDController init
-  SDController sdc;
 
   // disable ssid caching // debug
   // WiFi.persistent(false);
@@ -143,7 +135,7 @@ void setup(void) {
 
 }
 
-void loop(void){
+void loop(void) {
   server.handleClient();
 }
 

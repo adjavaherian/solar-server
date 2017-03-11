@@ -3,7 +3,6 @@
 */
 #ifndef SOLARSERVER_H
 #define SOLARSERVER_H
-
 #define FS_NO_GLOBALS
 
 #include <ESP8266WebServer.h>
@@ -16,7 +15,7 @@ class SolarServer
 {
   public:
     SolarServer(int port);
-    void startRouter();
+    void startRouter(String index);
     bool handleAPConfig();
     void handleClient();
     bool handleConfigPost();
@@ -31,6 +30,7 @@ class SolarServer
     void handleNotFound();
     void handleServerCapture();
     void handleServerStream();
+    void handleCaptureFile();
   private:
   protected:
    ESP8266WebServer server;

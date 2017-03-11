@@ -51,7 +51,6 @@ void SDController::init() {
     return;
   }
 
-
   // print the type and size of the first FAT-type volume
   uint32_t volumesize;
   Serial.print("\nVolume type is FAT");
