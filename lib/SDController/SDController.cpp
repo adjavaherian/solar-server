@@ -76,3 +76,38 @@ void SDController::init() {
   // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
 }
+
+void SDController::read(String path) {
+  SD.begin(0);
+  File myFile = SD.open(path);
+  // int httpCode = 0;
+  Serial.println("bernie file ???");
+  Serial.println(myFile);
+  if (myFile) {
+    Serial.print("bernie file exists");
+
+    byte clientBuf[64];
+    int clientCount = 0;
+
+    while(myFile.available())
+    {
+      clientBuf[clientCount] = myFile.read();
+      clientCount++;
+
+      if(clientCount > 63)
+      {
+        Serial.println("Sending Packet");
+
+        // httpCode = http.POST(clientBuf, 64);
+
+        clientCount = 0;
+      }
+    }
+    //final <64 byte cleanup packet
+    if(clientCount > 0) {
+      // httpCode = http.POST(clientBuf, clientCount);
+    }
+    // close the file:
+    myFile.close();
+  }
+}

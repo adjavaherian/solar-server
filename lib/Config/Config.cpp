@@ -3,9 +3,8 @@
 */
 #include "Config.hpp"
 
-Config::Config(): Config("config.txt") {
-
-}
+Config::Config(): Config("config.txt")
+{}
 
 Config::Config(String path)
 {
@@ -87,6 +86,9 @@ void Config::applyConfigSetting(String settingName, String settingValue)
    if(settingName == "PASSWORD") {
      _password = settingValue;
    }
+   if(settingName == "HOST") {
+     _host = settingValue;
+   }
 }
 
 bool Config::writeConfigSettings()
@@ -105,6 +107,10 @@ bool Config::writeConfigSettings()
     myFile.print("PASSWORD=");
     myFile.print(_password);
     myFile.println("]");
+    myFile.print("[");
+    myFile.print("HOST=");
+    myFile.print(_host);
+    myFile.println("]");
 
     // close the file:
     myFile.close();
@@ -114,15 +120,19 @@ bool Config::writeConfigSettings()
 
 }
 
-void Config::resetConfigSettings() {
+void Config::resetConfigSettings()
+{
     String SSID = "SSID";
     String PASSWORD = "PASSWORD";
+    String HOST = "HOST";
     String empty = "";
     applyConfigSetting(SSID, empty);
     applyConfigSetting(PASSWORD, empty);
+    applyConfigSetting(HOST, empty);
 }
 
-void Config::removeConfigFile() {
+void Config::removeConfigFile()
+{
   SPIFFS.remove(_configPath);
 }
 
@@ -134,4 +144,9 @@ const String& Config::ssid()
 const String& Config::password()
 {
   return _password;
+}
+
+const String& Config::host()
+{
+  return _host;
 }

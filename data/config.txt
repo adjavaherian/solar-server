@@ -1,2 +1,3 @@
 [SSID=]
 [PASSWORD=]
+[HOST=]
