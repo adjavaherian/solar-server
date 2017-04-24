@@ -212,6 +212,14 @@ void SolarServer::handleCaptureFile() {
   return server.send(200, "text/plain", "captured");
 }
 
+void SolarServer::handlePostFile() {
+  Poster poster;
+  SD.begin(0);
+  File myFile = SD.open("1.JPG");
+  poster.post(myFile);
+  return server.send(200, "text/plain", "posted");
+}
+
 void SolarServer::startRouter(String indexPath) {
 
   Serial.println("starting router with index " + indexPath);
@@ -251,6 +259,9 @@ void SolarServer::startRouter(String indexPath) {
 
   //capture file
   server.on("/capture-file", HTTP_GET, std::bind(&SolarServer::handleCaptureFile, this));
+
+  //capture file
+  server.on("/post-file", HTTP_GET, std::bind(&SolarServer::handlePostFile, this));
 
   //called when the url is not defined here
   //use it to load content from SPIFFS

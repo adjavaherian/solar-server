@@ -10,6 +10,7 @@
 #include <SolarCamera.hpp>
 #include <Utils.hpp>
 #include <Config.hpp>
+#include <Poster.hpp>
 
 class SolarServer
 {
@@ -31,6 +32,7 @@ class SolarServer
     void handleServerCapture();
     void handleServerStream();
     void handleCaptureFile();
+    void handlePostFile();
   private:
   protected:
    ESP8266WebServer server;
