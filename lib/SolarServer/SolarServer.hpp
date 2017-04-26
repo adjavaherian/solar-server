@@ -33,6 +33,7 @@ class SolarServer
     void handleServerStream();
     void handleCaptureFile();
     void handlePostFile();
+    void handleSleep();
   private:
   protected:
    ESP8266WebServer server;

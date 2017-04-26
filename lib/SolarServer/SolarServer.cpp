@@ -3,6 +3,8 @@
   Wraps ESP8266WebServer instance
 */
 
+
+
 #include "SolarServer.hpp"
 
 SolarServer::SolarServer(int port): server(port){}
@@ -220,6 +222,31 @@ void SolarServer::handlePostFile() {
   return server.send(200, "text/plain", "posted");
 }
 
+void SolarServer::handleSleep() {
+  Serial.println("starting a sleep cycle...");
+  server.send(200, "text/plain", "sleeping for 10seconds");
+  // ESP.deepSleep(10 * 1000000, WAKE_RF_DEFAULT);
+
+  for(int i = 1; i <= 3; i++) {
+    Serial.println("Light sleep:");
+    sleepNow();
+    delay(10000);
+
+    Serial.println("None sleep:");
+    wakeup();
+    delay(10000);
+    Poster poster;
+    SD.begin(0);
+    String path = String(String(i) + ".JPG");
+    Serial.println(path);
+    File myFile = SD.open(path);
+    poster.post(myFile);
+    delay(5000);
+  }
+
+
+}
+
 void SolarServer::startRouter(String indexPath) {
 
   Serial.println("starting router with index " + indexPath);
@@ -260,8 +287,11 @@ void SolarServer::startRouter(String indexPath) {
   //capture file
   server.on("/capture-file", HTTP_GET, std::bind(&SolarServer::handleCaptureFile, this));
 
-  //capture file
+  //post file
   server.on("/post-file", HTTP_GET, std::bind(&SolarServer::handlePostFile, this));
+
+  //start sleeping
+  server.on("/sleep", HTTP_GET, std::bind(&SolarServer::handleSleep, this));
 
   //called when the url is not defined here
   //use it to load content from SPIFFS

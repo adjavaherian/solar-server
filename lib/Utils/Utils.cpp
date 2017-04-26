@@ -32,3 +32,23 @@ String getContentType(String filename, bool download){
   else if(filename.endsWith(".gz")) return "application/x-gzip";
   return "text/plain";
 }
+
+void wakeup(void) {
+  wifi_fpm_close;
+  wifi_set_opmode(STATION_MODE);
+  wifi_station_connect();
+  Serial.println("Woke up from sleep");
+}
+
+void sleepNow() {
+  Serial.println("going to light sleep...");
+  wifi_station_disconnect();
+  wifi_set_opmode(NULL_MODE);
+  wifi_fpm_set_sleep_type(LIGHT_SLEEP_T); //light sleep mode
+
+  wifi_fpm_open();
+  delay(100);
+  wifi_fpm_set_wakeup_cb(wakeup); //wakeup callback
+  wifi_fpm_do_sleep(10 * 1000);
+  delay(100);
+}

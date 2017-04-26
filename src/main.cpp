@@ -18,6 +18,7 @@
 #include <Utils.hpp>
 #include <ESP8266HTTPClient.h>
 
+
 //temp
 #include <Arduino.h>
 #include <SD.h>
@@ -115,7 +116,6 @@ void setup(void) {
 
   // disable ssid caching // debug
   // WiFi.persistent(false);
-  // WiFi.forceSleepWake();
 
   // if no config.txt exists, run AP mode, else run in client mode
   if ( !config.exists() ) {

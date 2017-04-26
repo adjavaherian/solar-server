@@ -47,7 +47,7 @@ void SolarCamera::setup() {
   //Change to JPEG capture mode and initialize the OV2640 module
   myCAM.set_format(JPEG);
   myCAM.InitCAM();
-  myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+  myCAM.OV2640_set_JPEG_size(OV2640_800x600);
   myCAM.clear_fifo_flag();
 
 }
@@ -277,7 +277,7 @@ void SolarCamera::captureToSDFile() {
   file = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
 
   if (!file) {
-    Serial.println("open file faild");
+    Serial.println("open file failed");
     return;
   }
 
