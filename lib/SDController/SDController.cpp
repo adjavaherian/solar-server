@@ -14,6 +14,8 @@ SDController::SDController() : card(), volume(), root() {
 };
 
 void SDController::init() {
+  // run once
+  SD.begin(0);
 
   Serial.print("\nInitializing SD card...");
 
@@ -78,7 +80,7 @@ void SDController::init() {
 }
 
 void SDController::read(String path) {
-  SD.begin(0);
+
   File myFile = SD.open(path);
   // int httpCode = 0;
   Serial.println("bernie file ???");

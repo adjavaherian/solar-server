@@ -22,7 +22,7 @@ class SolarCamera
     void camCapture(ESP8266WebServer& server);
     void serverCapture(ESP8266WebServer& server);
     void serverStream(ESP8266WebServer& server);
-    void captureToSDFile();
+    void captureToSDFile(String name);
   private:
     //set GPIO16 as the slave select
     static const int CS = 16;

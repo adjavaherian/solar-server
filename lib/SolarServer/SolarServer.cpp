@@ -3,11 +3,25 @@
   Wraps ESP8266WebServer instance
 */
 
-
-
 #include "SolarServer.hpp"
 
 SolarServer::SolarServer(int port): server(port){}
+
+String SolarServer::getNameParam() {
+  // check name param
+  String name = "";
+  String params = "";
+  for (uint8_t i=0; i<server.args(); i++){
+    params += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    Serial.println("params");
+    Serial.println(params);
+    if (server.argName(i).equals("name")) {
+      name += server.arg(i);
+    }
+  }
+
+  return name;
+}
 
 bool SolarServer::handleAPConfig() {
   // server.send(200, "text/html", "<h1>You are connected</h1>");
@@ -208,43 +222,82 @@ void SolarServer::handleServerStream() {
 }
 
 void SolarServer::handleCaptureFile() {
+  // get name param
+  String name = SolarServer::getNameParam();
+
+  // capture file with name
   Serial.println("handle file capture");
   SolarCamera sc;
-  sc.captureToSDFile();
-  return server.send(200, "text/plain", "captured");
+  sc.captureToSDFile(name);
+  return server.send(200, "text/plain", "captured " + name + ".jpg");
 }
 
 void SolarServer::handlePostFile() {
+  // get name param
+  String name = SolarServer::getNameParam();
+
+  if (!name.endsWith("jpg")) name += ".jpg";
+
+  // post file
   Poster poster;
-  SD.begin(0);
-  File myFile = SD.open("1.JPG");
+  File myFile = SD.open(name);
   poster.post(myFile);
-  return server.send(200, "text/plain", "posted");
+  return server.send(200, "text/plain", "posted " + name);
+}
+
+void SolarServer::handleDeepSleep() {
+  //TODO make this configurable
+  ESP.deepSleep(10 * 1000000, WAKE_RF_DEFAULT);
 }
 
 void SolarServer::handleSleep() {
+
+  // get name param
+  String name = SolarServer::getNameParam();
+  if (!name.endsWith("jpg")) name += ".jpg";
+
+  // send 200 first
   Serial.println("starting a sleep cycle...");
-  server.send(200, "text/plain", "sleeping for 10seconds");
-  // ESP.deepSleep(10 * 1000000, WAKE_RF_DEFAULT);
+  server.send(200, "text/plain", "begin capture, post, sleep, wake cycle for file: " + name);
 
-  for(int i = 1; i <= 3; i++) {
-    Serial.println("Light sleep:");
-    sleepNow();
-    delay(10000);
+  _shouldSleep = true;
 
-    Serial.println("None sleep:");
-    wakeup();
-    delay(10000);
+  while(_shouldSleep) {
+
+    // capture
+    Serial.println("capture, post, sleep, wake cycle");
+    SolarCamera sc;
+    sc.captureToSDFile(name);
+    delay(5000);
+
+    // post
     Poster poster;
-    SD.begin(0);
-    String path = String(String(i) + ".JPG");
+    String path = String(name);
     Serial.println(path);
     File myFile = SD.open(path);
     poster.post(myFile);
     delay(5000);
+
+    // sleep
+    Serial.println("Light sleep:");
+    sleepNow();
+    delay(20000);
+
+    // wake
+    Serial.println("Awake from sleep:");
+    wakeup();
+    delay(10000);
+
   }
 
+}
 
+void SolarServer::handleWake() {
+  // set bool
+  _shouldSleep = false;
+  // send 200 first
+  Serial.println("ending a sleep cycle...");
+  server.send(200, "text/plain", "ending sleep, wake cycle...");
 }
 
 void SolarServer::startRouter(String indexPath) {
@@ -292,6 +345,12 @@ void SolarServer::startRouter(String indexPath) {
 
   //start sleeping
   server.on("/sleep", HTTP_GET, std::bind(&SolarServer::handleSleep, this));
+
+  //deep sleep
+  server.on("/deep-sleep", HTTP_GET, std::bind(&SolarServer::handleDeepSleep, this));
+
+  //awake
+  server.on("/wake", HTTP_GET, std::bind(&SolarServer::handleWake, this));
 
   //called when the url is not defined here
   //use it to load content from SPIFFS

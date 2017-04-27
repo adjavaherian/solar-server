@@ -21,7 +21,7 @@ void Poster::post(File myFile) {
   String fileSize = String(myFile.size());
 
   Serial.println();
-  Serial.println("bernie file exists");
+  Serial.println("file exists");
   Serial.println(myFile);
 
   if (myFile) {
