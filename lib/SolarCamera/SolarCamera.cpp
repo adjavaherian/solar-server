@@ -47,7 +47,7 @@ void SolarCamera::setup() {
   //Change to JPEG capture mode and initialize the OV2640 module
   myCAM.set_format(JPEG);
   myCAM.InitCAM();
-  myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+  myCAM.OV2640_set_JPEG_size(OV2640_1024x768);
   myCAM.clear_fifo_flag();
 
 }
@@ -237,23 +237,15 @@ void SolarCamera::serverStream(ESP8266WebServer& server) {
   }
 }
 
-void SolarCamera::captureToSDFile() {
+void SolarCamera::captureToSDFile(String name) {
 
-  char str[8];
+  // char str[8];
   byte buf[256];
   static int i = 0;
-  static int k = 0;
+  // static int k = 0;
   static int n = 0;
   uint8_t temp, temp_last;
   File file;
-
-  //Initialize SD Card
-  const int SD_CS = 0;
-  if (!SD.begin(SD_CS)) {
-    Serial.println("SD Card Error");
-  } else {
-    Serial.println("SD Card detected!");
-  }
 
   //Flush the FIFO
   myCAM.flush_fifo();
@@ -269,15 +261,16 @@ void SolarCamera::captureToSDFile() {
   Serial.println("Capture Done!");
 
   //Construct a file name
-  k = k + 1;
-  itoa(k, str, 10);
-  strcat(str, ".jpg");
+  if (!name.endsWith("jpg")) name += ".jpg";
+  // name.concat(".jpg");
+  Serial.println("capture file name");
+  Serial.println(name);
 
   //Open the new file
-  file = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
+  file = SD.open(name, O_WRITE | O_CREAT | O_TRUNC);
 
   if (!file) {
-    Serial.println("open file faild");
+    Serial.println("open file failed");
     return;
   }
 
@@ -296,15 +289,15 @@ void SolarCamera::captureToSDFile() {
 
     //Write image data to buffer if not full
     if( i < 256) {
-    buf[i++] = temp;
+      buf[i++] = temp;
     } else {
-    //Write 256 bytes image data to file
-    myCAM.CS_HIGH();
-    file.write(buf ,256);
-    i = 0;
-    buf[i++] = temp;
-    myCAM.CS_LOW();
-    myCAM.set_fifo_burst();
+      //Write 256 bytes image data to file
+      myCAM.CS_HIGH();
+      file.write(buf, 256);
+      i = 0;
+      buf[i++] = temp;
+      myCAM.CS_LOW();
+      myCAM.set_fifo_burst();
     }
     delay(0);
 
@@ -313,7 +306,7 @@ void SolarCamera::captureToSDFile() {
   //Write the remain bytes in the buffer
   if (i > 0) {
     myCAM.CS_HIGH();
-    file.write(buf,i);
+    file.write(buf, i);
   }
   //Close the file
   file.close();

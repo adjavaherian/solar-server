@@ -1,5 +1,4 @@
-/*
-
+/**
   Solar Server
   esp8266 with access point mode and client ssid config
 
@@ -10,17 +9,28 @@
   edit the page by going to http://solar-server.local/edit
 */
 
+#ifndef UNIT_TEST  // IMPORTANT LINE!
+
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <SolarServer.hpp>
 #include <Config.hpp>
 #include <Utils.hpp>
+#include <ESP8266HTTPClient.h>
 
+
+//temp
+#include <Arduino.h>
+#include <SD.h>
+#include <SDController.hpp>
+
+// host name
 const char* host = "solar-server";
 
 // instances for config and server
 Config config;
 SolarServer server(80);
+SDController sdc;
 
 void apMode() {
   // AP Init
@@ -64,7 +74,7 @@ void clientMode(String ssid, String password) {
     Serial.println("waiting for re-connect" + String(WiFi.status()));
     delay(500);
     count++;
-    if (count == 10) {
+    if (count == 20) {
       return apMode();
     }
   }
@@ -83,14 +93,14 @@ void clientMode(String ssid, String password) {
 
 }
 
-#ifndef UNIT_TEST  // IMPORTANT LINE!
-
 void setup(void) {
 
   // Serial Init
   Serial.begin(115200);
   Serial.println();
   Serial.setDebugOutput(true);
+
+  sdc.init();
 
   // SPIFFS setup
   SPIFFS.begin();
@@ -106,8 +116,6 @@ void setup(void) {
 
   // disable ssid caching // debug
   // WiFi.persistent(false);
-  // WiFi.forceSleepWake();
-  // return apMode();
 
   // if no config.txt exists, run AP mode, else run in client mode
   if ( !config.exists() ) {
@@ -122,6 +130,7 @@ void setup(void) {
 
     String ssid = config.ssid();
     String password = config.password();
+    String customHost = config.host();
 
     Serial.println(config.ssid());
 
@@ -136,7 +145,9 @@ void setup(void) {
 }
 
 void loop(void) {
+
   server.handleClient();
+
 }
 
 #endif

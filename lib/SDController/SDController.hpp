@@ -12,6 +12,7 @@ class SDController
   public:
     SDController();
     void init();
+    void read(String path);
   private:
     const int chipSelect = 0;
   protected:

@@ -43,3 +43,4 @@ jspm_packages
 # resources
 ArduCAM_ESP8266_UNO/
 *.pdf
+etc/

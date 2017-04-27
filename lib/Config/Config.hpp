@@ -20,6 +20,7 @@ class Config
     void applyConfigSetting(String settingName, String settingValue);
     const String& ssid();
     const String& password();
+    const String& host();
     bool writeConfigSettings();
     void removeConfigFile();
     void resetConfigSettings();
@@ -27,6 +28,7 @@ class Config
     String _configPath;
     String _ssid;
     String _password;
+    String _host;
 };
 
 #endif

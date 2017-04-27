@@ -10,11 +10,13 @@
 #include <SolarCamera.hpp>
 #include <Utils.hpp>
 #include <Config.hpp>
+#include <Poster.hpp>
 
 class SolarServer
 {
   public:
     SolarServer(int port);
+    String getNameParam();
     void startRouter(String index);
     bool handleAPConfig();
     void handleClient();
@@ -31,7 +33,12 @@ class SolarServer
     void handleServerCapture();
     void handleServerStream();
     void handleCaptureFile();
+    void handlePostFile();
+    void handleSleep();
+    void handleDeepSleep();
+    void handleWake();
   private:
+    bool _shouldSleep = false;
   protected:
    ESP8266WebServer server;
 };
