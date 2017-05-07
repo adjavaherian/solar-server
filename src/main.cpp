@@ -18,7 +18,6 @@
 #include <Utils.hpp>
 #include <ESP8266HTTPClient.h>
 
-
 //temp
 #include <Arduino.h>
 #include <SD.h>
@@ -29,7 +28,7 @@ const char* host = "solar-server";
 
 // instances for config and server
 Config config;
-SolarServer server(80);
+SolarServer server(80, config);
 SDController sdc;
 
 void apMode() {
@@ -79,13 +78,24 @@ void clientMode(String ssid, String password) {
     }
   }
 
+  // get ip and store for later
+  String clientIP = WiFi.localIP().toString();
+  config.setIP(clientIP);
+
+  Serial.println("config.ip");
+  Serial.println(config.ip());
+
   // debug
   Serial.println("");
   Serial.print("Connected! IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(clientIP);
   Serial.print("Open http://");
   Serial.print(host);
   Serial.println(".local to see the file browser");
+
+  Serial.print("Windows: open http://");
+  Serial.print(clientIP);
+  Serial.println("");
 
   // start the server
   String indexPath = "/";

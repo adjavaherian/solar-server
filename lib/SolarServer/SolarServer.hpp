@@ -15,9 +15,9 @@
 class SolarServer
 {
   public:
-    SolarServer(int port);
+    SolarServer(int port, Config& config);
     String getNameParam();
-    void startRouter(String index);
+    void startRouter(String indexPath);
     bool handleAPConfig();
     void handleClient();
     bool handleConfigPost();
@@ -41,6 +41,7 @@ class SolarServer
     bool _shouldSleep = false;
   protected:
    ESP8266WebServer server;
+   Config& _config;
 };
 
 #endif

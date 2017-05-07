@@ -5,7 +5,7 @@
 
 #include "SolarServer.hpp"
 
-SolarServer::SolarServer(int port): server(port){}
+SolarServer::SolarServer(int port, Config& config): _config(config), server(port){}
 
 String SolarServer::getNameParam() {
   // check name param
@@ -35,7 +35,6 @@ void SolarServer::handleClient() {
 
 bool SolarServer::handleConfigPost() {
 
-  Config config;
   String tryAgain = "/try_again.htm";
   String success = "/success.htm";
   String SSID = "SSID";
@@ -53,10 +52,10 @@ bool SolarServer::handleConfigPost() {
 
   // apply the new settings to the config class
   // and write them to file
-  config.applyConfigSetting(SSID, client_ssid);
-  config.applyConfigSetting(PASSWORD, client_password);
+  _config.applyConfigSetting(SSID, client_ssid);
+  _config.applyConfigSetting(PASSWORD, client_password);
 
-  if(config.writeConfigSettings()) {
+  if(_config.writeConfigSettings()) {
     return handleFileRead(success);
     //restart here
   }
@@ -65,14 +64,13 @@ bool SolarServer::handleConfigPost() {
 
 bool SolarServer::handleConfigReset() {
 
-  Config config;
   String reset = "/reset.htm";
   String tryAgain = "/try_again.htm";
 
   Serial.println("handleConfigReset...");
 
-  config.resetConfigSettings();
-  if (config.writeConfigSettings()) {
+  _config.resetConfigSettings();
+  if (_config.writeConfigSettings()) {
     return handleFileRead(reset);
     //restart here
   }
@@ -200,10 +198,12 @@ void SolarServer::handleNotFound() {
 }
 
 void SolarServer::handleGetHeap() {
+
   String json = "{";
   json += "\"heap\":"+String(ESP.getFreeHeap());
   json += ", \"analog\":"+String(analogRead(A0));
   json += ", \"gpio\":"+String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
+  json += ", \"ip\":" + String(" \"") + _config.ip() + String("\"");
   json += "}";
   server.send(200, "text/json", json);
   json = String();

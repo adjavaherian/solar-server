@@ -21,14 +21,18 @@ class Config
     const String& ssid();
     const String& password();
     const String& host();
+    const String& ip();
     bool writeConfigSettings();
     void removeConfigFile();
     void resetConfigSettings();
+    void setIP(String ip);
+
   private:
     String _configPath;
     String _ssid;
     String _password;
     String _host;
+    String _ip;
 };
 
 #endif
