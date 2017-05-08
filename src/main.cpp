@@ -53,7 +53,7 @@ void apMode() {
   Serial.println("HTTP server started in AP mode");
 }
 
-void clientMode(String ssid, String password) {
+void clientMode(String ssid, String password, String customHost) {
 
   //WIFI INIT
   Serial.println("Connecting to: " + ssid);
@@ -65,7 +65,11 @@ void clientMode(String ssid, String password) {
   WiFi.begin(ssid.c_str(), password.c_str());
 
   // mdns helper
-  MDNS.begin(host);
+  if (customHost.length() > 0) {
+    MDNS.begin(customHost.c_str());
+  } else {
+    MDNS.begin(host);
+  }
 
   // try reconnect 4 times, then apMode.
   int count = 0;
@@ -147,7 +151,7 @@ void setup(void) {
     if (ssid.length() == 0) {
       apMode();
     } else {
-      clientMode(ssid, password);
+      clientMode(ssid, password, customHost);
     }
 
   }

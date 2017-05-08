@@ -39,13 +39,15 @@ bool SolarServer::handleConfigPost() {
   String success = "/success.htm";
   String SSID = "SSID";
   String PASSWORD = "PASSWORD";
+  String HOST = "HOST";
 
   if(server.args() == 0)
     return handleFileRead(tryAgain);
 
   String client_ssid = server.arg(0);
   String client_password = server.arg(1);
-  Serial.println("handleConfigPost: " + client_ssid + ":" + client_password);
+  String client_host = server.arg(2);
+  Serial.println("handleConfigPost: " + client_ssid + ":" + client_password + ":" + client_host);
 
   if(client_ssid.length() == 0)
     return handleFileRead(tryAgain);
@@ -54,6 +56,7 @@ bool SolarServer::handleConfigPost() {
   // and write them to file
   _config.applyConfigSetting(SSID, client_ssid);
   _config.applyConfigSetting(PASSWORD, client_password);
+  _config.applyConfigSetting(HOST, client_host);
 
   if(_config.writeConfigSettings()) {
     return handleFileRead(success);
@@ -64,14 +67,13 @@ bool SolarServer::handleConfigPost() {
 
 bool SolarServer::handleConfigReset() {
 
-  String reset = "/reset.htm";
   String tryAgain = "/try_again.htm";
 
   Serial.println("handleConfigReset...");
 
   _config.resetConfigSettings();
   if (_config.writeConfigSettings()) {
-    return handleFileRead(reset);
+    return server.send(200, "text/plain", "success");
     //restart here
   }
   return handleFileRead(tryAgain);
@@ -204,6 +206,8 @@ void SolarServer::handleGetHeap() {
   json += ", \"analog\":"+String(analogRead(A0));
   json += ", \"gpio\":"+String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
   json += ", \"ip\":" + String(" \"") + _config.ip() + String("\"");
+  json += ", \"host\":" + String(" \"") + _config.host() + String("\"");
+  json += ", \"ssid\":" + String(" \"") + _config.ssid() + String("\"");
   json += "}";
   server.send(200, "text/json", json);
   json = String();
