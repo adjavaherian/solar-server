@@ -136,6 +136,11 @@ void Config::removeConfigFile()
   SPIFFS.remove(_configPath);
 }
 
+void Config::setIP(String ip)
+{
+  _ip = ip;
+}
+
 const String& Config::ssid()
 {
   return _ssid;
@@ -149,4 +154,9 @@ const String& Config::password()
 const String& Config::host()
 {
   return _host;
+}
+
+const String& Config::ip()
+{
+  return _ip;
 }

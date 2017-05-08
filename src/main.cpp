@@ -18,7 +18,6 @@
 #include <Utils.hpp>
 #include <ESP8266HTTPClient.h>
 
-
 //temp
 #include <Arduino.h>
 #include <SD.h>
@@ -29,7 +28,7 @@ const char* host = "solar-server";
 
 // instances for config and server
 Config config;
-SolarServer server(80);
+SolarServer server(80, config);
 SDController sdc;
 
 void apMode() {
@@ -54,7 +53,7 @@ void apMode() {
   Serial.println("HTTP server started in AP mode");
 }
 
-void clientMode(String ssid, String password) {
+void clientMode(String ssid, String password, String customHost) {
 
   //WIFI INIT
   Serial.println("Connecting to: " + ssid);
@@ -66,7 +65,11 @@ void clientMode(String ssid, String password) {
   WiFi.begin(ssid.c_str(), password.c_str());
 
   // mdns helper
-  MDNS.begin(host);
+  if (customHost.length() > 0) {
+    MDNS.begin(customHost.c_str());
+  } else {
+    MDNS.begin(host);
+  }
 
   // try reconnect 4 times, then apMode.
   int count = 0;
@@ -79,13 +82,24 @@ void clientMode(String ssid, String password) {
     }
   }
 
+  // get ip and store for later
+  String clientIP = WiFi.localIP().toString();
+  config.setIP(clientIP);
+
+  Serial.println("config.ip");
+  Serial.println(config.ip());
+
   // debug
   Serial.println("");
   Serial.print("Connected! IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(clientIP);
   Serial.print("Open http://");
   Serial.print(host);
   Serial.println(".local to see the file browser");
+
+  Serial.print("Windows: open http://");
+  Serial.print(clientIP);
+  Serial.println("");
 
   // start the server
   String indexPath = "/";
@@ -137,7 +151,7 @@ void setup(void) {
     if (ssid.length() == 0) {
       apMode();
     } else {
-      clientMode(ssid, password);
+      clientMode(ssid, password, customHost);
     }
 
   }

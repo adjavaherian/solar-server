@@ -5,7 +5,7 @@
 
 #include "SolarServer.hpp"
 
-SolarServer::SolarServer(int port): server(port){}
+SolarServer::SolarServer(int port, Config& config): _config(config), server(port){}
 
 String SolarServer::getNameParam() {
   // check name param
@@ -35,28 +35,30 @@ void SolarServer::handleClient() {
 
 bool SolarServer::handleConfigPost() {
 
-  Config config;
   String tryAgain = "/try_again.htm";
   String success = "/success.htm";
   String SSID = "SSID";
   String PASSWORD = "PASSWORD";
+  String HOST = "HOST";
 
   if(server.args() == 0)
     return handleFileRead(tryAgain);
 
   String client_ssid = server.arg(0);
   String client_password = server.arg(1);
-  Serial.println("handleConfigPost: " + client_ssid + ":" + client_password);
+  String client_host = server.arg(2);
+  Serial.println("handleConfigPost: " + client_ssid + ":" + client_password + ":" + client_host);
 
   if(client_ssid.length() == 0)
     return handleFileRead(tryAgain);
 
   // apply the new settings to the config class
   // and write them to file
-  config.applyConfigSetting(SSID, client_ssid);
-  config.applyConfigSetting(PASSWORD, client_password);
+  _config.applyConfigSetting(SSID, client_ssid);
+  _config.applyConfigSetting(PASSWORD, client_password);
+  _config.applyConfigSetting(HOST, client_host);
 
-  if(config.writeConfigSettings()) {
+  if(_config.writeConfigSettings()) {
     return handleFileRead(success);
     //restart here
   }
@@ -65,15 +67,13 @@ bool SolarServer::handleConfigPost() {
 
 bool SolarServer::handleConfigReset() {
 
-  Config config;
-  String reset = "/reset.htm";
   String tryAgain = "/try_again.htm";
 
   Serial.println("handleConfigReset...");
 
-  config.resetConfigSettings();
-  if (config.writeConfigSettings()) {
-    return handleFileRead(reset);
+  _config.resetConfigSettings();
+  if (_config.writeConfigSettings()) {
+    return server.send(200, "text/plain", "success");
     //restart here
   }
   return handleFileRead(tryAgain);
@@ -200,10 +200,14 @@ void SolarServer::handleNotFound() {
 }
 
 void SolarServer::handleGetHeap() {
+
   String json = "{";
   json += "\"heap\":"+String(ESP.getFreeHeap());
   json += ", \"analog\":"+String(analogRead(A0));
   json += ", \"gpio\":"+String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
+  json += ", \"ip\":" + String(" \"") + _config.ip() + String("\"");
+  json += ", \"host\":" + String(" \"") + _config.host() + String("\"");
+  json += ", \"ssid\":" + String(" \"") + _config.ssid() + String("\"");
   json += "}";
   server.send(200, "text/json", json);
   json = String();

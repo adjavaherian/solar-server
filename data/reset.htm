@@ -1,40 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Solar Server Reset</title>
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <title>Solar Server AP Mode</title>
-
+  <link rel="stylesheet" href="/bootstrap.min.css" type="text/css">
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script>
-    const SolarClient = {};
+    $(document).ready(function(){
 
-    SolarClient.init = () => {
-      console.log(window.location.pathname);
-    }
+      $('#yes-button').on('click', function(e){
+        e.preventDefault();
+        $.ajax({
+            url: '/reset',
+            type: 'post',
+            data: '',
+            success: function(data, textStatus, jqXHR) {
+                if(textStatus === 'success') {
+                    $('#reset').toggle();
+                    $('#success').toggle();
+                }
+            }
+        });
+      });
+      $('#no-button').on('click', function(e){
+        e.preventDefault();
+        window.location = '/';
+      });
 
-    $(document).ready(SolarClient.init());
-
+    });
   </script>
-
 </head>
 <body id="index" style="margin:0; padding:0;">
-
   <div class="container">
         <div class="header clearfix">
           <h3 class="text-muted">Solar Server &#x1F33B; &#x2795; &#x1F4F7;</h3>
         </div>
+        <div class="jumbotron" id="reset">
+          <h1>Reset Config?</h1>
+          <p>
+            Would you like to reset your SSID and Host configuration?
+            This will put the Solar Server back in AP / Config mode after next manual reset.
+          </p>
+          <div style="margin-top:10px">
+            <input class="btn btn-lg btn-success" role="button" type="submit" id="yes-button" value="Yes"/>
+            <input class="btn btn-lg btn-success" role="button" type="reset" id="no-button" value="No"/>
+          </div>
+        </div>
 
-        <div class="jumbotron">
+        <div class="jumbotron" id="success" style="display: none">
           <h1>Reset Successful.</h1>
-          <p>Your config file has been reset.  Your Solar Server will restart into AP mode.</p>
-          <a href="/">Reboot your device and click here.</a>
+          <p>
+            Your config file has been reset.
+            Manually reset your Solar Server to restart into new Configuration Mode.
+            Reboot your device, connect to "solar-server" WiFi and <a href="http://192.168.4.1">click here</a>.
+          </p>
         </div>
 
         <footer class="footer">
-          <p>&copy; 2017 NLS, LLC.</p>
+          <p>&copy; 2017 Makacat, LLC.</p>
         </footer>
 
       </div> <!-- /container -->

@@ -1,64 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Solar Server Client</title>
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <title>Solar Server AP Mode</title>
-
+  <link rel="stylesheet" href="/bootstrap.min.css" type="text/css">
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script type="text/javascript" src="graphs.js"></script>
   <script type="text/javascript">
-    var heap,temp,digi;
-    var reloadPeriod = 1000;
-    var running = false;
+    var heap;
+    var hostURL = 'http://solar-server.local';
 
-    function loadValues(){
-      if(!running) return;
-      var xh = new XMLHttpRequest();
-      xh.onreadystatechange = function(){
-        if (xh.readyState == 4){
-          if(xh.status == 200) {
-            var res = JSON.parse(xh.responseText);
-            heap.add(res.heap);
-            temp.add(res.analog);
-            digi.add(res.gpio);
-            if(running) setTimeout(loadValues, reloadPeriod);
-          } else running = false;
+    function getData(){
+      $.ajax({
+        url: "/all",
+        type: 'GET',
+        success: function(res) {
+          console.log(res);
+          $('#ip').html(res.ip);
+
+          if (res.host) {
+            hostURL = 'http://'+res.host+'.local';
+          }
+
+          $('#host').html(hostURL);
+          $('#ssid').html(res.ssid);
+
+          heap.add(res.heap);
+          setTimeout(getData, 2000);
+
         }
-      };
-      xh.open("GET", "/all", true);
-      xh.send(null);
-    };
-
-    function run(){
-      if(!running){
-        running = true;
-        loadValues();
-      }
+      });
     }
 
-    function onBodyLoad(){
-      var refreshInput = document.getElementById("refresh-rate");
-      refreshInput.value = reloadPeriod;
-      refreshInput.onchange = function(e){
-        var value = parseInt(e.target.value);
-        reloadPeriod = (value > 0)?value:0;
-        e.target.value = reloadPeriod;
-      }
-      var stopButton = document.getElementById("stop-button");
-      stopButton.onclick = function(e){
-        running = false;
-      }
-      var startButton = document.getElementById("start-button");
-      startButton.onclick = function(e){
-        run();
-      }
+    $(document).ready(function(){
 
       heap = createGraph(document.getElementById("heap"), "Current Heap", 100, 125, 0, 30000, true, "orange");
-      run();
-    }
+      $('#heap').css({border: 'none', margin: 0, padding: 0});
+      getData();
+
+    });
   </script>
 
 </head>
@@ -71,19 +53,36 @@
 
         <div class="jumbotron">
           <h1>Welcome to Solar Server</h1>
-          <p>Your server is running in Client mode.  You are connected to __wifi name__ as __client ip__</p>
+          <p>
+            Your server is running in Client mode.
+            You are connected to <span id="ssid"></span> as <span id="ip"></span>
+            The Camera URL is <span id="host"></span>
+          </p>
           <div id="heap"></div>
         </div>
 
         <div class="row marketing">
 
           <div class="col-lg-6">
-
+            <h3>Here's a few things we can do:</h3>
+            <ul style="list-style: none">
+              <li><a href="/sleep" class="solar-link">Sleep / Camera / Post Cycle</a></li>
+              <li><a href="/wake" class="solar-link">Wake a sleeping camera</a></li>
+              <li><a href="/capture" class="solar-link">Capture an image to your Browser</a></li>
+              <li><a href="/capture-file" class="solar-link">Capture an image to SD Card</a></li>
+              <li><a href="/stream" class="solar-link">Stream camera to your Browser</a></li>
+              <li><a href="/post-file" class="solar-link">Post an SD file to Amazon S3</a></li>
+              <li><a href="/list?dir=/" class="solar-link">List all our server files</a></li>
+              <li><a href="/edit" class="solar-link">Edit server files</a></li>
+              <li><a href="/all" class="solar-link">Check our JSON endpoint</a></li>
+              <li><a href="/config.htm" class="solar-link">Write a new Config</a></li>
+              <li><a href="/reset.htm" class="solar-link">Reset all Configs</a></li>
+            </ul>
           </div>
         </div>
 
         <footer class="footer">
-          <p>&copy; 2017 NLS, LLC.</p>
+          <p>&copy; 2017 Makacat, LLC.</p>
         </footer>
 
       </div> <!-- /container -->
