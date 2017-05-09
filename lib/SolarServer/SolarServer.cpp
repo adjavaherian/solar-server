@@ -73,10 +73,12 @@ bool SolarServer::handleConfigReset() {
 
   _config.resetConfigSettings();
   if (_config.writeConfigSettings()) {
-    return server.send(200, "text/plain", "success");
+    server.send(200, "text/plain", "success");
+    return true;
     //restart here
   }
   return handleFileRead(tryAgain);
+  return false;
 
 }
 
