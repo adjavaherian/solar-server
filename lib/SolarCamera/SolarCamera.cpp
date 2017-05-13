@@ -34,7 +34,8 @@ void SolarCamera::setup() {
 
   #if defined (OV2640_MINI_2MP) || defined (OV2640_CAM)
     //Check if the camera module type is OV2640
-    myCAM.wrSensorReg8_8(0xff, 0x01);
+    myCAM.wrSensorReg8_8(0xff, 0x00);
+    myCAM.wrSensorReg8_8(0xc7, 0x00); //AWB on
     myCAM.rdSensorReg8_8(OV2640_CHIPID_HIGH, &vid);
     myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
     if ((vid != 0x26 ) && (( pid != 0x41 ) || ( pid != 0x42 ))) {
