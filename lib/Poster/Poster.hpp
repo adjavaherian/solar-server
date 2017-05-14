@@ -13,7 +13,7 @@ class Poster
 {
   public:
     Poster();
-    void post(File myFile);
+    String post(File myFile);
   private:
     // post variables
     const char* post_host = "solar-server.s3.amazonaws.com";

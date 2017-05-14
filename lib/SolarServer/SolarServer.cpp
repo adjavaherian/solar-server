@@ -263,8 +263,8 @@ void SolarServer::handlePostFile() {
   // post file
   Poster poster;
   File myFile = SD.open(name);
-  poster.post(myFile);
-  return server.send(200, "text/plain", "posted " + name);
+  String response = poster.post(myFile);
+  return server.send(200, "text/plain", response);
 }
 
 void SolarServer::handleDeepSleep() {
@@ -304,7 +304,7 @@ void SolarServer::handleSleep() {
     // sleep
     Serial.println("Light sleep:");
     sleepNow();
-    delay(sleepInterval);
+    delay(sleepInterval * 1000);
 
     // wake
     Serial.println("Awake from sleep:");
@@ -367,7 +367,7 @@ void SolarServer::startRouter(String indexPath) {
   server.on("/post-file", HTTP_GET, std::bind(&SolarServer::handlePostFile, this));
 
   //start sleeping
-  server.on("/sleep-capture", HTTP_GET, std::bind(&SolarServer::handleSleep, this));
+  server.on("/sleep-capture", HTTP_POST, std::bind(&SolarServer::handleSleep, this));
 
   //deep sleep
   server.on("/deep-sleep", HTTP_GET, std::bind(&SolarServer::handleDeepSleep, this));

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Solar Server SD Capture</title>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/bootstrap.min.css" type="text/css">
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script>
+
+    var postURL = "";
+
+    function getData() {
+      $.ajax({
+        url: "/all",
+        type: 'GET',
+        success: function(res) {
+          console.log(res);
+
+          if (res.ip) {
+            postURL = 'http://'+res.ip;
+            $('#post-link').html(postURL);
+          }
+
+        }
+      });
+    }
+
+    $(document).ready(function(){
+
+      getData();
+
+      $('#sd-form').on('submit', function(e){
+        e.preventDefault();
+        $.ajax({
+            url: '/capture-file',
+            type: 'GET',
+            data: $("#sd-form").serialize(),
+            success: function(data, textStatus, jqXHR) {
+              postURL += '/post-file?name=' + $('#name').val();
+              $('#post-link').html(postURL).attr({href: postURL});
+              $('#main').toggle();
+              $('#success').toggle();
+            }
+        });
+      });
+
+    });
+  </script>
+</head>
+<body id="index" style="margin:0; padding:0;">
+  <div class="container">
+        <div class="header clearfix">
+          <h3 class="text-muted">Solar Server &#x1F33B; &#x2795; &#x1F4F7;</h3>
+        </div>
+        <div class="jumbotron" id="main">
+          <h1>SD Card Capture</h1>
+          <p>
+            You can name and capture an image to the SD card.
+            The file will be stored on the SD card until you manually delete it.
+            Input a file name and submit the form.
+          </p>
+          <div style="margin-top:10px">
+            <form id="sd-form" method="post">
+              <div class="form-group">
+                <label for="file-name">File Name</label>
+                <input name="name" type="text" id="name" class="form-control" aria-describedby="file" placeholder="Enter File Name">
+                <small class="form-text text-muted">This is the name you would like your captured file to be called.</small>
+              </div>
+              <div style="margin-top:10px">
+                <input class="btn btn-lg btn-success" role="button" type="submit" id="start-button" value="Capture"/>
+                <input class="btn btn-lg btn-success" role="button" type="reset" id="reset-button" value="Reset"/>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="jumbotron" id="success" style="display: none">
+          <h1>SD Capture Successful.</h1>
+          <p>
+            The Picture is on the SD card.
+            You can upload it to Amazon S3 by clicking <a id="post-link" href="#">here</a>.
+          </p>
+        </div>
+
+        <footer class="footer">
+          <p>&copy; 2017 Makacat, LLC.</p>
+        </footer>
+
+      </div> <!-- /container -->
+
+</body>
+</html>

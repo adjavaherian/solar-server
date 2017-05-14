@@ -17,8 +17,8 @@
           console.log(res);
 
           if (res.ip) {
-            hostURL = 'http://'+res.ip+'.local';
-            $('#ip').html(hostURL);
+            hostURL = 'http://'+res.ip;
+            $('#ip').attr({"href": hostURL});
           }
 
         }
@@ -34,18 +34,15 @@
         $.ajax({
             url: '/sleep-capture',
             type: 'post',
-            data: '',
+            data: $("#sleep-form").serialize(),
             success: function(data, textStatus, jqXHR) {
                 if(textStatus === 'success') {
-                    $('#reset').toggle();
+                    $('#aws-link').attr({'href': 'https://s3.amazonaws.com/solar-server/' + $('#name').val() + '.jpg'});
+                    $('#main').toggle();
                     $('#success').toggle();
                 }
             }
         });
-      });
-      $('#no-button').on('click', function(e){
-        e.preventDefault();
-        window.location = '/';
       });
 
     });
@@ -56,7 +53,7 @@
         <div class="header clearfix">
           <h3 class="text-muted">Solar Server &#x1F33B; &#x2795; &#x1F4F7;</h3>
         </div>
-        <div class="jumbotron" id="reset">
+        <div class="jumbotron" id="main">
           <h1>Sleep Capture</h1>
           <p>
             This form will configure your Solar Server to capture a file and then sleep for a given interval.
@@ -73,11 +70,11 @@
               </div>
               <div class="form-group">
                 <label for="interval">Interval (Seconds)</label>
-                <input type="text" name="interval" class="form-control" id="interval" placeholder="3600">
-                <small class="form-text text-muted">This is the time in seconds to sleep before taking each picture.  The minimum is 60 (1 minute) seconds and the maximum is 86400 (1 day)</small>
+                <input type="text" name="interval" class="form-control" id="interval" placeholder="60">
+                <small class="form-text text-muted">This is the time in seconds to sleep before taking each picture.  The minimum is 60 (1 minute) seconds and the maximum is 86400 (1 day). There are 3600 seconds in one hour</small>
               </div>
               <div style="margin-top:10px">
-                <input class="btn btn-lg btn-success" role="button" type="submit" id="start-button" value="Save"/>
+                <input class="btn btn-lg btn-success" role="button" type="submit" id="start-button" value="Start"/>
                 <input class="btn btn-lg btn-success" role="button" type="reset" id="reset-button" value="Reset"/>
               </div>
             </form>
@@ -88,7 +85,7 @@
           <h1>Sleep / Capture Successful.</h1>
           <p>
             The Solar Server will now sleep and wake up after the specified interval to take a picture.
-            The picture should be uploaded to Amazon S3 and can be downloaded <a href="https://s3.amazonaws.com/solar-server/">here</a>.
+            The picture should be uploaded to Amazon S3 and can be downloaded <a id="aws-link" href="#">here</a>.
             You can manually reboot your device to stop the interval and photo capture.
             <a href="" id="ip">Click here after a reboot.</a>
           </p>
