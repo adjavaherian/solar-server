@@ -11,7 +11,7 @@
 
 Poster::Poster() {};
 
-void Poster::post(File myFile) {
+String Poster::post(File myFile) {
 
   // open sd and file
   // String fileName = path;
@@ -35,7 +35,7 @@ void Poster::post(File myFile) {
     // try connect or return on fail
     if (!client.connect(post_host, post_port)) {
       Serial.println("http post connection failed");
-      return;
+      return String("Post Failure");
     }
 
     // We now create a URI for the request
@@ -128,10 +128,13 @@ void Poster::post(File myFile) {
 
     // Read all the lines of the reply from server and print them to Serial
     Serial.println("request sent");
+    String responseHeaders = "";
+
     while (client.connected()) {
       // Serial.println("while client connected");
       String line = client.readStringUntil('\n');
       Serial.println(line);
+      responseHeaders += line;
       if (line == "\r") {
         Serial.println("headers received");
         break;
@@ -148,7 +151,7 @@ void Poster::post(File myFile) {
 
     // close the file:
     myFile.close();
-
+    return responseHeaders;
 
   }
 }

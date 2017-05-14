@@ -23,6 +23,22 @@ String SolarServer::getNameParam() {
   return name;
 }
 
+int SolarServer::getIntervalParam() {
+  // check interval param
+  int interval = 1000000; // 1000 seconds default
+  String params = "";
+  for (uint8_t i=0; i<server.args(); i++){
+    params += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    Serial.println("params");
+    Serial.println(params);
+    if (server.argName(i).equals("interval")) {
+      interval = server.arg(i).toInt();
+    }
+  }
+
+  return interval;
+}
+
 bool SolarServer::handleAPConfig() {
   // server.send(200, "text/html", "<h1>You are connected</h1>");
   String configRoute = "/config.htm";
@@ -247,8 +263,8 @@ void SolarServer::handlePostFile() {
   // post file
   Poster poster;
   File myFile = SD.open(name);
-  poster.post(myFile);
-  return server.send(200, "text/plain", "posted " + name);
+  String response = poster.post(myFile);
+  return server.send(200, "text/plain", response);
 }
 
 void SolarServer::handleDeepSleep() {
@@ -260,6 +276,7 @@ void SolarServer::handleSleep() {
 
   // get name param
   String name = SolarServer::getNameParam();
+  int sleepInterval = SolarServer::getIntervalParam();
   if (!name.endsWith("jpg")) name += ".jpg";
 
   // send 200 first
@@ -274,7 +291,7 @@ void SolarServer::handleSleep() {
     Serial.println("capture, post, sleep, wake cycle");
     SolarCamera sc;
     sc.captureToSDFile(name);
-    delay(5000);
+    delay(1000); // 1 second to keep cool
 
     // post
     Poster poster;
@@ -282,17 +299,17 @@ void SolarServer::handleSleep() {
     Serial.println(path);
     File myFile = SD.open(path);
     poster.post(myFile);
-    delay(5000);
+    delay(1000); // 1 second to keep cool
 
     // sleep
     Serial.println("Light sleep:");
     sleepNow();
-    delay(20000);
+    delay(sleepInterval * 1000);
 
     // wake
     Serial.println("Awake from sleep:");
     wakeup();
-    delay(10000);
+    delay(20000); // 20 seconds to awake and connect
 
   }
 
@@ -350,7 +367,7 @@ void SolarServer::startRouter(String indexPath) {
   server.on("/post-file", HTTP_GET, std::bind(&SolarServer::handlePostFile, this));
 
   //start sleeping
-  server.on("/sleep", HTTP_GET, std::bind(&SolarServer::handleSleep, this));
+  server.on("/sleep-capture", HTTP_POST, std::bind(&SolarServer::handleSleep, this));
 
   //deep sleep
   server.on("/deep-sleep", HTTP_GET, std::bind(&SolarServer::handleDeepSleep, this));
