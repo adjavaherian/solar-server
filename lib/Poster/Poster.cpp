@@ -11,7 +11,9 @@
 
 Poster::Poster() {};
 
-String Poster::post(File myFile) {
+String Poster::post(File myFile, String bucket = "solar-server") {
+
+  const char* bucketURL = String(bucket + post_host).c_str();
 
   // open sd and file
   // String fileName = path;
@@ -33,7 +35,7 @@ String Poster::post(File myFile) {
     Serial.println(post_host);
 
     // try connect or return on fail
-    if (!client.connect(post_host, post_port)) {
+    if (!client.connect(bucketURL , post_port)) {
       Serial.println("http post connection failed");
       return String("Post Failure");
     }

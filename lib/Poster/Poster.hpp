@@ -13,10 +13,10 @@ class Poster
 {
   public:
     Poster();
-    String post(File myFile);
+    String post(File myFile, String bucket);
   private:
     // post variables
-    const char* post_host = "solar-server.s3.amazonaws.com";
+    String post_host = ".s3.amazonaws.com";
     const int post_port = 80;
     String url = "/";
   protected:

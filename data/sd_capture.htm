@@ -9,20 +9,12 @@
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script>
 
-    var postURL = "";
-
     function getData() {
       $.ajax({
         url: "/all",
         type: 'GET',
         success: function(res) {
           console.log(res);
-
-          if (res.ip) {
-            postURL = 'http://'+res.ip;
-            $('#post-link').html(postURL);
-          }
-
         }
       });
     }
@@ -38,10 +30,23 @@
             type: 'GET',
             data: $("#sd-form").serialize(),
             success: function(data, textStatus, jqXHR) {
-              postURL += '/post-file?name=' + $('#name').val();
-              $('#post-link').html(postURL).attr({href: postURL});
+              $('#hidden-name').val(('#name').val());
               $('#main').toggle();
               $('#success').toggle();
+            }
+        });
+      });
+
+      $('#upload-form').on('submit', function(e){
+        e.preventDefault();
+        $.ajax({
+            url: '/post-file',
+            type: 'GET',
+            data: $("#upload-form").serialize(),
+            success: function(data, textStatus, jqXHR) {
+              $('#success').toggle();
+              $('#s3-response').html(data + textStatus);
+              $('#post-success').toggle();
             }
         });
       });
@@ -62,7 +67,7 @@
             Input a file name and submit the form.
           </p>
           <div style="margin-top:10px">
-            <form id="sd-form" method="post">
+            <form id="sd-form">
               <div class="form-group">
                 <label for="file-name">File Name</label>
                 <input name="name" type="text" id="name" class="form-control" aria-describedby="file" placeholder="Enter File Name">
@@ -79,9 +84,29 @@
         <div class="jumbotron" id="success" style="display: none">
           <h1>SD Capture Successful.</h1>
           <p>
-            The Picture is on the SD card.
-            You can upload it to Amazon S3 by clicking <a id="post-link" href="#">here</a>.
+            The Image is on the SD card.
+            You can now upload it to Amazon S3.
+            Optionally, enter the name of an accessible S3 bucket
           </p>
+          <form id="upload-form">
+            <div class="form-group">
+              <label for="bucket-name">Bucket Name</label>
+              <input name="bucket" type="text" id="bucket" class="form-control" aria-describedby="bucket" placeholder="solar-server">
+              <small class="form-text text-muted">This is the name of your bucket, not the URL.</small>
+              <input name="name" type="hidden" id="hidden-name">
+            </div>
+            <div style="margin-top:10px">
+              <input class="btn btn-lg btn-success" role="button" type="submit" id="upload-button" value="Upload"/>
+            </div>
+          </form>
+        </div>
+
+        <div class="jumbotron" id="post-success" style="display: none">
+          <h1>S3 Post Successful.</h1>
+          <p>
+            The Image is on S3.
+          </p>
+          <div id="s3-response" style="margin-top:10px" />
         </div>
 
         <footer class="footer">

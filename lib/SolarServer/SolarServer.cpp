@@ -23,6 +23,22 @@ String SolarServer::getNameParam() {
   return name;
 }
 
+String SolarServer::getBucketParam() {
+  // check name param
+  String bucket = "";
+  String params = "";
+  for (uint8_t i=0; i<server.args(); i++){
+    params += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    Serial.println("params");
+    Serial.println(params);
+    if (server.argName(i).equals("bucket")) {
+      bucket += server.arg(i);
+    }
+  }
+
+  return bucket;
+}
+
 int SolarServer::getIntervalParam() {
   // check interval param
   int interval = 1000000; // 1000 seconds default
@@ -257,13 +273,14 @@ void SolarServer::handleCaptureFile() {
 void SolarServer::handlePostFile() {
   // get name param
   String name = SolarServer::getNameParam();
+  String bucket = SolarServer::getBucketParam();
 
   if (!name.endsWith("jpg")) name += ".jpg";
 
   // post file
   Poster poster;
   File myFile = SD.open(name);
-  String response = poster.post(myFile);
+  String response = poster.post(myFile, "");
   return server.send(200, "text/plain", response);
 }
 
@@ -298,7 +315,7 @@ void SolarServer::handleSleep() {
     String path = String(name);
     Serial.println(path);
     File myFile = SD.open(path);
-    poster.post(myFile);
+    poster.post(myFile, "");
     delay(1000); // 1 second to keep cool
 
     // sleep

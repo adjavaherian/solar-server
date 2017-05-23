@@ -17,6 +17,7 @@ class SolarServer
   public:
     SolarServer(int port, Config& config);
     String getNameParam();
+    String getBucketParam();
     int getIntervalParam();
     void startRouter(String indexPath);
     bool handleAPConfig();
